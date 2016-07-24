@@ -79,6 +79,7 @@ public class Server {
             this.setUpSocketsAndStreams();
             userMod = new UserMod();
             userMod.allUsers();
+            ChatMessage im = new ChatMessage();
             this.start();
         }
 
@@ -128,19 +129,24 @@ public class Server {
             catch (ClassNotFoundException e) { e.printStackTrace(); }
 
             stringParts = string.split(":", 2);
-            System.out.println(stringParts[0]);
 
             switch(stringParts[0]){
                 case "Sign Up":
-
                     if(this.signUp()) { // User is signing up
                         System.out.println("(Server.java): User signed up");
                     }
                     break;
 
                 case "Login":
-                    //
                     login(stringParts[1]);
+                    break;
+
+                case "ID":
+                    System.out.println("(Server.java): User ID -> " + stringParts[1]);
+                    break;
+
+                case "Chat":
+                    System.out.println("(Server.java): This is a chat message");
                     break;
 
                 default:
@@ -158,9 +164,12 @@ public class Server {
         }
 
         private void login(String s) {
+            System.out.println("(Server.java: Inside Login Method");
+            System.out.println("(Server.java: This is the string argument -> " + s);
             if(userMod.get(s) != null){
+                System.out.println("(Server.java: User was found in the database");
                 try {
-                    sOutput.writeObject("LIS");
+                    sOutput.writeObject("Success");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -173,22 +182,23 @@ public class Server {
         }
 
         private void whileChatting() {
-            String message = "My name is server, hi :)\n";
-            sendMessage(message);
+
+            String[] message;
             // Send message to other client
             do{
                 try{
-                    message = sInput.readObject().toString();
-                    sendMessage(message);
-                }
-                catch (ClassNotFoundException c){
+                    message = sInput.readObject().toString().split(":", 2);
+
+                    System.out.println(message[0]);
+
+                    sendMessage(message[1]);
+                }catch (ClassNotFoundException c){
                     showMessage("idk wtf the user said! \n");
-                }
-                catch (IOException e) {
+                }catch (IOException e) {
                     e.printStackTrace();
                 }
             }
-            while (!message.equals("die"));
+            while (true);
         }
 
         private void sendUsers(){
@@ -202,7 +212,7 @@ public class Server {
 
         private void sendMessage(String messaage){
             try{
-                sOutput.writeObject("Server:" + messaage);
+                sOutput.writeObject("Chat:" + messaage);
                 sOutput.flush();
             }
             catch (IOException io){
